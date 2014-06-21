@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 ## coding: latin-1
 import os, sys
-lib_path = os.path.abspath('/home/sflis/scripts/deamon/')
-sys.path.append(lib_path)
 
 import sys, time
 from daemon import Daemon
@@ -12,68 +10,68 @@ from datetime import datetime
 
 
 
-class Monitor(object):
+#class Monitor(object):
     
 
-    class MeasureCPUTemp(object):
-	"""
-	This function reads from the CPU temperature from the temp log in 
-	thermal/thermal_zone0/. It returns the temperature in deg C. 
-	"""
-	def __init__(self, thermalfiles = ["/sys/class/thermal/thermal_zone0/temp",] ):
-	    self.thermalfiles = thermalfiles
-	
-	def monitor(self):
-	    t = list()
-	    for tf in self.thermalfiles: 
-		f = open(tf, 'r')
-		t += [float(f.read()) / 1000.0]
-	    return t
-	    
-	def __str__(self):
-	    temp_str = r""
-	    for t in self.monitor():
-		temp_str += r" %s°C "%t
-	    return temp_str
-	    
-    def __init__(self, monitorlogfile, thermal_logfile_list =["/sys/class/thermal/thermal_zone0/temp"] ):
-	self.temp_monitor = Monitor.MeasureCPUTemp(thermal_logfile_list)
-	#self.cpu_temp_conv_fact = 1.0/1000.0
-	self.loadavg_file = "/proc/loadavg"
-	self.monitorlogfile = monitorlogfile
-	self.start_time = datetime.now()
-	self.n_reads = 0
-	
-    def read_load_av(self):
-	"""
-	Reads and returns the load averages from '/proc/loadavg' 
-	"""
-	f = open(self.loadavg_file,'r')
-	line = f.read()
-	line = line.split()
-	return (float(line[0]),float(line[1]),float(line[2]))
-	
-    def monitor(self):
-	self.n_reads += 1
-	temp = self.temp_monitor.monitor()
-	loadav = self.read_load_av()
-	tnow = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-	f = open(self.monitorlogfile,'a')
-	f.write(datetime.now().strftime('%Y-%m-%d %H:%M:%S')+" {\n")
-	
-	tline = "Temp: "
-	for t in temp:
-	    tline += str(t)+" "
-	tline += "\n"    
-	f.write(tline)
-	
-	laline = "Loadav: "
-	for l in loadav:
-	    laline += str(l)+" "
-	laline += "\n"
-	f.write(laline)
-	
-	f.write("}\n")
+#    class MeasureCPUTemp(object):
+#	"""
+#	This function reads from the CPU temperature from the temp log in 
+#	thermal/thermal_zone0/. It returns the temperature in deg C. 
+#	"""
+#	def __init__(self, thermalfiles = ["/sys/class/thermal/thermal_zone0/temp",] ):
+#	    self.thermalfiles = thermalfiles
+#	
+#	def monitor(self):
+#	    t = list()
+#	    for tf in self.thermalfiles: 
+#		f = open(tf, 'r')
+#		t += [float(f.read()) / 1000.0]
+#	    return t
+#	    
+#	def __str__(self):
+#	    temp_str = r""
+#	    for t in self.monitor():
+#		temp_str += r" %s°C "%t
+#	    return temp_str
+#	    
+#    def __init__(self, monitorlogfile, thermal_logfile_list =["/sys/class/thermal/thermal_zone0/temp"] ):
+#	self.temp_monitor = Monitor.MeasureCPUTemp(thermal_logfile_list)
+#	#self.cpu_temp_conv_fact = 1.0/1000.0
+#	self.loadavg_file = "/proc/loadavg"
+#	self.monitorlogfile = monitorlogfile
+#	self.start_time = datetime.now()
+#	self.n_reads = 0
+#	
+#    def read_load_av(self):
+#	"""
+#	Reads and returns the load averages from '/proc/loadavg' 
+#	"""
+#	f = open(self.loadavg_file,'r')
+#	line = f.read()
+#	line = line.split()
+#	return (float(line[0]),float(line[1]),float(line[2]))
+#	
+#    def monitor(self):
+#	self.n_reads += 1
+#	temp = self.temp_monitor.monitor()
+#	loadav = self.read_load_av()
+#	tnow = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+#	f = open(self.monitorlogfile,'a')
+#	f.write(datetime.now().strftime('%Y-%m-%d %H:%M:%S')+" {\n")
+#	
+#	tline = "Temp: "
+#	for t in temp:
+#	    tline += str(t)+" "
+#	tline += "\n"    
+#	f.write(tline)
+#	
+#	laline = "Loadav: "
+#	for l in loadav:
+#	    laline += str(l)+" "
+#	laline += "\n"
+#	f.write(laline)
+#	
+#	f.write("}\n")
 	
 class MonitorDaemon(Daemon):
     def __init__(self, configfile = "/home/sflis/scripts/Monitor/moni.conf"):
@@ -82,17 +80,36 @@ class MonitorDaemon(Daemon):
 	self.monitorlogfile = parse(self.configfile, "monilogfile") 
 	self.interval = int(parse(self.configfile, "moniinterval"))
 	self.monitor = Monitor(self.monitorlogfile)
-	#print(self.monitorlogfile)
-	#print(self.interval)
+	
+        self.loadavg_file = '/proc/loadavg'
+        self.device_temp_sens = {'zone0':"/sys/class/thermal/thermal_zone0/temp"}
     def run(self):
+        import os.path
+os.path.isfile(fname)
 	while(True):
 	    self.monitor.monitor()
 	    time.sleep(self.interval)
 
-
     
+    def monitor(self):
+        
+    def read_load_av(self):                                                                                                                                                                   
+        """                   
+        Reads and returns the load averages from '/proc/loadavg'
+        """                                                                                                                                                                                   
+        f = open(self.loadavg_file,'r')                                                                                                                                                       
+        line = f.read()                                                                                                                                                                       
+        line = line.split()                                                                                                                                                                  
+        return (float(line[0]),float(line[1]),float(line[2]))      
 	
-	
+    def read_device_temp(self):
+        t = dict()                                                                                                                                                                         
+        for tf in self.device_temp_sens.keys():
+            f = open(device_temp_sens.keys[tf], 'r') 
+            t[tf] = [float(f.read()) / 1000.0] 
+        return t
+
+     
 #Simple stupid parser....
 def parse(file_name, key_word):
     """
