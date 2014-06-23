@@ -3,7 +3,7 @@
 import os, sys
 
 import sys, time
-from daemon import Daemon
+from daemon.daemon import Daemon
 from time import gmtime, strftime
 from datetime import datetime
 
@@ -74,40 +74,81 @@ from datetime import datetime
 #	f.write("}\n")
 	
 class MonitorDaemon(Daemon):
-    def __init__(self, configfile = "/home/sflis/scripts/Monitor/moni.conf"):
-	Daemon.__init__(self,'/tmp/py-monitor-daemon.pid')
-	self.configfile = configfile
-	self.monitorlogfile = parse(self.configfile, "monilogfile") 
-	self.interval = int(parse(self.configfile, "moniinterval"))
-	self.monitor = Monitor(self.monitorlogfile)
+    def __init__(self, configfile = "moni.conf"):
 	
+	
+        self.configfile = configfile
+	self.interval = int(parse(self.configfile, "moniinterval"))
+        self.data_file = parse(self.configfile,"datafile")
+        self.log_path = parse(self.configfile,"logpath")
+        Daemon.__init__(self,'/tmp/py-monitor-daemon.pid',
+            stdout=self.log_path+"monitor.log", 
+            stderr=self.log_path+"monitor.log"
+        )
+        print(self.log_path+"/monitor.log")
+
         self.loadavg_file = '/proc/loadavg'
         self.device_temp_sens = {'zone0':"/sys/class/thermal/thermal_zone0/temp"}
+        os.system('modprobe w1-gpio')
+        os.system('modprobe w1-therm')
+        self.devices = {"outdoor1":"/sys/bus/w1/devices/28-0000057a2cf4/w1_slave","indoor1":"/sys/bus/w1/devices/28-0000051a9026/w1_slave",}
     def run(self):
+        import pickle
         import os.path
-os.path.isfile(fname)
 	while(True):
-	    self.monitor.monitor()
-	    time.sleep(self.interval)
-
+            print(datetime.now)
+            if(not os.path.isfile(self.data_file)):
+                f = open(self.data_file,'wb')
+            else:
+                f = open(self.data_file,'a+b')
+            r = self.monitor()
+            pickle.dump(r,f)
+            f.close()
+            time.sleep(self.interval)
+            
     
     def monitor(self):
-        
+        entry = dict()
+        entry['time'] = {'datetime':datetime.now(),'time':time.time()}
+        entry['load_av'] = self.read_load_av()
+        entry['device_temp'] = self.read_device_temp()
+        entry['temp_sens'] = self.read_temperature()
+        return entry
+
     def read_load_av(self):                                                                                                                                                                   
         """                   
         Reads and returns the load averages from '/proc/loadavg'
-        """                                                                                                                                                                                   
+        """           
+        print("Reading load av")
         f = open(self.loadavg_file,'r')                                                                                                                                                       
         line = f.read()                                                                                                                                                                       
         line = line.split()                                                                                                                                                                  
         return (float(line[0]),float(line[1]),float(line[2]))      
 	
     def read_device_temp(self):
+        print("Reading Device Temp")
         t = dict()                                                                                                                                                                         
         for tf in self.device_temp_sens.keys():
-            f = open(device_temp_sens.keys[tf], 'r') 
+            print(self.device_temp_sens[tf])
+            f = open(self.device_temp_sens[tf], 'r') 
             t[tf] = [float(f.read()) / 1000.0] 
         return t
+
+    def read_temperature(self):
+        temps = dict()
+        for d in self.devices.keys():
+            f = open(self.devices[d], 'r')
+            lines = f.readlines()
+            f.close()
+            while (lines[0].strip()[-3:] != 'YES' ):                                                                                                              
+                time.sleep(0.2)
+                f = open(devices[d], 'r')
+                lines = f.readlines()
+                f.close()
+                
+            equals_pos = lines[1].find('t=')                                                                                                                                     
+            temps[d] = float(lines[1][equals_pos+2:])/1000                                                                                                        
+        return temps
 
      
 #Simple stupid parser....
