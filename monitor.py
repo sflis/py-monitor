@@ -75,10 +75,9 @@ from datetime import datetime
 	
 class MonitorDaemon(Daemon):
     def __init__(self, configfile = "moni.conf"):
-	
-	
+        
         self.configfile = configfile
-	self.interval = int(parse(self.configfile, "moniinterval"))
+        self.interval = int(parse(self.configfile, "moniinterval"))
         self.data_file = parse(self.configfile,"datafile")
         self.log_path = parse(self.configfile,"logpath")
         Daemon.__init__(self,'/tmp/py-monitor-daemon.pid',
@@ -95,7 +94,7 @@ class MonitorDaemon(Daemon):
     def run(self):
         import pickle
         import os.path
-	while(True):
+        while(True):
             print(datetime.now)
             if(not os.path.isfile(self.data_file)):
                 f = open(self.data_file,'wb')
@@ -168,23 +167,22 @@ def parse(file_name, key_word):
             return el[0]
     return None
 
-	
 if __name__ == "__main__":
-	daemon = MonitorDaemon()
-	if len(sys.argv) == 2:
-		if 'start' == sys.argv[1]:
-			daemon.start()
-		elif 'stop' == sys.argv[1]:
-			daemon.stop()
-		elif 'restart' == sys.argv[1]:
-			daemon.restart()
-		else:
-			print "Unknown command"
-			sys.exit(2)
-		sys.exit(0)
-	else:
-		print "usage: %s start|stop|restart" % sys.argv[0]
-		sys.exit(2)
-		
-		
+    daemon = MonitorDaemon()
+    if len(sys.argv) == 2:
+        if 'start' == sys.argv[1]:
+            daemon.start()
+        elif 'stop' == sys.argv[1]:
+            daemon.stop()
+        elif 'restart' == sys.argv[1]:
+            daemon.restart()
+        else:
+            print "Unknown command"
+            sys.exit(2)
+        sys.exit(0)
+    else:
+        print "usage: %s start|stop|restart" % sys.argv[0]
+        sys.exit(2)
+        
+        
 

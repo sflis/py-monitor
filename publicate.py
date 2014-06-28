@@ -112,11 +112,11 @@ class PublicateDaemon(Daemon):
         ax.set_ylabel("Temperatur C$^\circ$", fontsize = 45)
 
         #save image 
-        fig.savefig( self.output_path+'/temperature.png', dpi=300 )
+        fig.savefig( self.output_path+'/moni_img/temperature.png', dpi=300 )
         del ax
         del fig
     def publicate_current_temp(self):
-        f = open("/var/www/temperature.html",'w')
+        f = open(self.output_path+"/temperature.html",'w')
         
         f.write("<b>%s: %03.2fC&deg</b> <br>"%('Inomhus', self.data['temp_indoor1'][-1]))
         f.write("<b>%s: %03.2fC&deg</b> <br>"%('Utomhus', self.data['temp_outdoor1'][-1]))
@@ -125,7 +125,10 @@ class PublicateDaemon(Daemon):
         pass
 
 if __name__ == "__main__":
-        daemon = PublicateDaemon()
+        from os.path import expanduser
+        home = expanduser("~")    
+        py_monitor_conf=  os.path.join(home,".py-monitor","moni.conf")
+        daemon = PublicateDaemon(py_monitor_conf)
         if len(sys.argv) == 2:
                 if 'start' == sys.argv[1]:
                         daemon.start()
