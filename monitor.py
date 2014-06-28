@@ -142,7 +142,7 @@ class MonitorDaemon(Daemon):
             f.close()
             while (lines[0].strip()[-3:] != 'YES' ):                                                                                                              
                 time.sleep(0.2)
-                f = open(devices[d], 'r')
+                f = open(self.devices[d], 'r')
                 lines = f.readlines()
                 f.close()
                 
