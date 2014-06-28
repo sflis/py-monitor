@@ -9,6 +9,7 @@ from datetime import datetime
 from monitor import parse
 import pickle
 import matplotlib
+import matplotlib as mpl
 # Force matplotlib to not use any Xwindows backend.
 matplotlib.use('Agg')
 class PublicateDaemon(Daemon):
@@ -24,13 +25,32 @@ class PublicateDaemon(Daemon):
             stdout=self.log_path+"publicate.log",
             stderr=self.log_path+"publicate.log"
         )
-        
-        
+        mpl.rcParams['legend.fontsize'] = 'medium'
+        mpl.rcParams['axes.labelsize']    = 'large'
+        mpl.rcParams['xtick.labelsize']  = 'medium'
+        mpl.rcParams['ytick.labelsize']  = 'medium'
     def run(self):
-       import pickle
-       while(True):
-           self.publicate()
-           time.sleep(self.interval)
+        import pickle
+        while(True):
+            self.publicate()
+            time.sleep(self.interval)
+    
+    def get_data(self):
+        f = open(self.data_file,'rb')
+        print(self.data_file)
+        data = list()
+        while 1:
+            try:
+                data.append(pickle.load(f))
+            except:
+                break
+        time = list()
+        temp_indoor = list()
+        temp_outdoor = list()
+        for d in data:
+            time.append(d['time']['datetime'])
+            temp_indoor.append(d['temp_sens']['indoor1'])
+            temp_outdoor.append(d['temp_sens']['outdoor1'])
 
     def publicate(self):
        from matplotlib import pyplot as plt
@@ -53,28 +73,42 @@ class PublicateDaemon(Daemon):
            temp_outdoor.append(d['temp_sens']['outdoor1'])
        
 
-       fig = plt.figure()
+       fig = plt.figure(figsize=(20, 10))
 
        ax = fig.add_subplot(111)
        
+       step = 5
        # Plot the data as a red line with round markers
-       ax.plot(time,temp_indoor,'r-o',label='Inomhustemperatur')
-       ax.plot(time,temp_outdoor,'b-o',label='Utomhustemperatur')
+       ax.plot(time[::step],temp_indoor[::step], 'r-o', label='Inomhustemperatur')
+       ax.plot(time[::step],temp_outdoor[::step], 'b-o',label='Utomhustemperatur')
        
        # Set the xtick locations to correspond to just the dates you entered.
-       ax.set_xticks(time[::10])
+       tick_steps = 720
+       ax.set_xticks(time[277::tick_steps])
        
        # Set the xtick labels to correspond to just the dates you entered.
        ax.set_xticklabels(
-           [date.strftime("%Y-%m-%d") for date in time]
+           [date.strftime("%Y-%m-%d") for date in time[277::tick_steps]]
         )
-   #        ax.set_xlim( -620, 620 )
+
        ax.set_ylim( -10, 25 )
+       ax.legend(loc='best')
+       
+       #setting grid
+       ax.yaxis.grid(True)
+       ax.xaxis.grid(True)
+       
+       #setting axis labels
+       ax.set_xlabel("Tid", fontsize = 45)
+       ax.set_ylabel("Temperatur C$^\circ$", fontsize = 45)
+       
+       #save image
        fig.savefig( self.output_path+'/temperature.png', dpi=300 )
        f = open("/var/www/temperature.html",'w')
-      
+
+
        f.write("<b>%s: %03.2fC&deg</b> <br>"%('indoor1', temp_indoor[-1]))
-       f.write("<b>%s: %03.2fC&deg</b> <br>"%('outdoor1', temp_outdoor[-1]))
+       f.write("<b>%s: %03.2fC&deg</b> <br>\n"%('outdoor1', temp_outdoor[-1]))
 
 if __name__ == "__main__":
         daemon = PublicateDaemon()
