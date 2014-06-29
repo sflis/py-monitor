@@ -96,11 +96,16 @@ class MonitorDaemon(Daemon):
         import os.path
         while(True):
             print(datetime.now)
+            try:
+                r = self.monitor()
+            except:
+                e = sys.exc_info()[0]
+                continue
+            
             if(not os.path.isfile(self.data_file)):
                 f = open(self.data_file,'wb')
             else:
                 f = open(self.data_file,'a+b')
-            r = self.monitor()
             pickle.dump(r,f)
             f.close()
             time.sleep(self.interval)
