@@ -25,6 +25,7 @@ def main(opt = None):
         f.write("datafile:                                     %s\n"%os.path.join(py_monitor_data_path,"moni-data.pkl"))
         f.write("logpath:                                      %s/\n"%py_monitor_data_path)
         f.write("outputpath:                                   /var/www/\n")
+        f.write("image_outputpath:                             /var/www/moni_img/\n")
     elif(opt == '-d'):
         
         path_here = os.path.dirname(os.path.realpath(__file__))
@@ -33,8 +34,8 @@ def main(opt = None):
         f.write("pubinterval:                                  10\n")
         f.write("datafile:                                     %s\n"%os.path.join(path_here,"moni-data.pkl"))
         f.write("logpath:                                      %s/\n"%path_here)
-        f.write("outputpath:                                       %s\n"%os.path.join(path_here,"figures/"))
-        
+        f.write("outputpath:                                   %s\n"%path_here)
+        f.write("image_outputpath:                             %s\n"%os.path.join(path_here,"figures/"))
 if(__name__ == '__main__'):
     narg = len(sys.argv)
     if(narg ==2):

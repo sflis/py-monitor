@@ -10,11 +10,15 @@ import datetime as dt
 from monitor import parse
 import pickle
 import matplotlib as mpl
-
+import inspect
 # Force matplotlib to not use any Xwindows backend.
 mpl.use('Agg')
 from matplotlib import pyplot as plt
 from matplotlib.dates import date2num
+
+
+
+
 class PublicateDaemon(Daemon):
     def __init__(self, configfile = "moni.conf"):
 
@@ -24,7 +28,11 @@ class PublicateDaemon(Daemon):
         self.data_file = parse(self.configfile,"datafile")
         self.log_path = parse(self.configfile,"logpath")
         self.output_path = parse(self.configfile,"outputpath")
+        self.image_output_path = parse(self.configfile,"image_outputpath")
         self.data = dict()
+        self.hold_output = False
+        self.fig = plt.figure(figsize=(20, 10))
+        self.ax = self.fig.add_subplot(111)
         Daemon.__init__(self,'/tmp/py-monitor-publicate-daemon.pid',
             stdout=self.log_path+"publicate.log",
             stderr=self.log_path+"publicate.log"
@@ -33,6 +41,18 @@ class PublicateDaemon(Daemon):
         mpl.rcParams['axes.labelsize']    = 'large'
         mpl.rcParams['xtick.labelsize']  = 'medium'
         mpl.rcParams['ytick.labelsize']  = 'medium'
+        
+#___________________________________________________________________________________________________
+    def log(self, msg):
+        
+        frame,filename,line_number,function_name,lines,index=\
+        inspect.getouterframes(inspect.currentframe())[1]
+        s = datetime.now().strftime('%Y-%m-%d %H:%M:%S')+" %s:%d in %s :  %s"%(filename,line_number,function_name,msg)
+        if(self.hold_output):
+            self.log_output += s+"\n"
+        else:
+            print(s)
+#___________________________________________________________________________________________________
     def run(self):
         import pickle
         while(True):
@@ -43,9 +63,9 @@ class PublicateDaemon(Daemon):
             self.free_data()
             sys.stdout.flush()
             time.sleep(self.interval)
-    
+#___________________________________________________________________________________________________
     def read_data(self):
-        print("Reading monitoring data")
+        self.log("Reading monitoring data")
         f = open(self.data_file,'rb')
         print(self.data_file)
         data = list()
@@ -64,17 +84,20 @@ class PublicateDaemon(Daemon):
         self.data['time'] = time
         self.data['temp_indoor1'] = temp_indoor
         self.data['temp_outdoor1'] = temp_outdoor
-    
+#___________________________________________________________________________________________________
     def free_data(self):
         for k in self.data.keys():
            del self.data[k]
-    
+#___________________________________________________________________________________________________
     def default_temp_plot(self):
+        self.log("Generating temperature plot")
         temp_indoor = self.data['temp_indoor1']
         temp_outdoor = self.data['temp_outdoor1']
         time = self.data['time']
-        fig = plt.figure(figsize=(20, 10))
-        ax = fig.add_subplot(111)
+        fig = self.fig
+        ax = self.ax
+        #fig = plt.figure(figsize=(20, 10))
+        #ax = fig.add_subplot(111)
         
         step = 5
         # Plot the data
@@ -112,10 +135,12 @@ class PublicateDaemon(Daemon):
         ax.set_ylabel("Temperatur C$^\circ$", fontsize = 45)
 
         #save image 
-        fig.savefig( self.output_path+'/moni_img/temperature.png', dpi=300 )
+        fig.savefig( self.image_output_path+'/temperature.png', dpi=300 )
+        fig.clf()
         del ax
         del fig
     def publicate_current_temp(self):
+        self.log("Writing html file.")
         f = open(self.output_path+"/temperature.html",'w')
         
         f.write("<b>%s: %03.2fC&deg</b> <br>"%('Inomhus', self.data['temp_indoor1'][-1]))
