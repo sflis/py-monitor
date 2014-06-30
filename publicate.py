@@ -94,10 +94,8 @@ class PublicateDaemon(Daemon):
         temp_indoor = self.data['temp_indoor1']
         temp_outdoor = self.data['temp_outdoor1']
         time = self.data['time']
-        fig = self.fig
-        ax = self.ax
-        #fig = plt.figure(figsize=(20, 10))
-        #ax = fig.add_subplot(111)
+        fig = plt.figure(figsize=(20, 10))
+        ax = fig.add_subplot(111)
         
         step = 5
         # Plot the data
@@ -113,9 +111,9 @@ class PublicateDaemon(Daemon):
         xticks = list()
         delta  = time[-1]-st
         end = int((delta.days+1) * 24 )
-        print(end)
-        print(delta)
-        print(time[-1])
+        #print(end)
+        #print(delta)
+        #print(time[-1])
         for t in range(0,end,12):
             xticks.append(st + dt.timedelta(hours=t))
             print(st + dt.timedelta(hours=t),t)
@@ -136,9 +134,8 @@ class PublicateDaemon(Daemon):
 
         #save image 
         fig.savefig( self.image_output_path+'/temperature.png', dpi=300 )
-        fig.clf()
-        del ax
-        del fig
+        #Important to close the figure so that the memory is released.
+        plt.close()
     def publicate_current_temp(self):
         self.log("Writing html file.")
         f = open(self.output_path+"/temperature.html",'w')
