@@ -80,6 +80,7 @@ class MonitorDaemon(Daemon):
         self.interval = int(parse(self.configfile, "moniinterval"))
         self.data_file = parse(self.configfile,"datafile")
         self.log_path = parse(self.configfile,"logpath")
+        self.hold_output = False
         Daemon.__init__(self,'/tmp/py-monitor-daemon.pid',
             stdout=self.log_path+"monitor.log", 
             stderr=self.log_path+"monitor.log"
@@ -91,6 +92,18 @@ class MonitorDaemon(Daemon):
         os.system('modprobe w1-gpio')
         os.system('modprobe w1-therm')
         self.devices = {"outdoor1":"/sys/bus/w1/devices/28-0000057a2cf4/w1_slave","indoor1":"/sys/bus/w1/devices/28-0000051a9026/w1_slave",}
+    
+#___________________________________________________________________________________________________
+    def log(self, msg):
+        
+        frame,filename,line_number,function_name,lines,index=\
+        inspect.getouterframes(inspect.currentframe())[1]
+        s = datetime.now().strftime('%Y-%m-%d %H:%M:%S')+" %s:%d in %s :  %s"%(filename,line_number,function_name,msg)
+        if(self.hold_output):
+            self.log_output += s+"\n"
+        else:
+            print(s)
+#___________________________________________________________________________________________________
     def run(self):
         import pickle
         import os.path
@@ -100,6 +113,7 @@ class MonitorDaemon(Daemon):
                 r = self.monitor()
             except:
                 e = sys.exc_info()[0]
+                self.log("Caught an exception: %s"%e)
                 continue
             
             if(not os.path.isfile(self.data_file)):
@@ -110,7 +124,7 @@ class MonitorDaemon(Daemon):
             f.close()
             time.sleep(self.interval)
             
-    
+#___________________________________________________________________________________________________
     def monitor(self):
         entry = dict()
         entry['time'] = {'datetime':datetime.now(),'time':time.time()}
@@ -118,27 +132,28 @@ class MonitorDaemon(Daemon):
         entry['device_temp'] = self.read_device_temp()
         entry['temp_sens'] = self.read_temperature()
         return entry
-
+#___________________________________________________________________________________________________
     def read_load_av(self):                                                                                                                                                                   
         """                   
         Reads and returns the load averages from '/proc/loadavg'
         """           
-        print("Reading load av")
+        self.log("Reading load av")
         f = open(self.loadavg_file,'r')                                                                                                                                                       
         line = f.read()                                                                                                                                                                       
         line = line.split()                                                                                                                                                                  
         return (float(line[0]),float(line[1]),float(line[2]))      
-	
+#___________________________________________________________________________________________________
     def read_device_temp(self):
-        print("Reading Device Temp")
+        self.log("Reading Device Temp")
         t = dict()                                                                                                                                                                         
         for tf in self.device_temp_sens.keys():
             print(self.device_temp_sens[tf])
             f = open(self.device_temp_sens[tf], 'r') 
             t[tf] = [float(f.read()) / 1000.0] 
         return t
-
+#___________________________________________________________________________________________________
     def read_temperature(self):
+        self.log("Reading temperature sensors")
         temps = dict()
         for d in self.devices.keys():
             f = open(self.devices[d], 'r')

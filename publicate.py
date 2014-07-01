@@ -67,7 +67,7 @@ class PublicateDaemon(Daemon):
     def read_data(self):
         self.log("Reading monitoring data")
         f = open(self.data_file,'rb')
-        print(self.data_file)
+        #print(self.data_file)
         data = list()
         while 1:
             try:
