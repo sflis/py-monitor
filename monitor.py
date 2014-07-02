@@ -6,7 +6,7 @@ import sys, time
 from daemon.daemon import Daemon
 from time import gmtime, strftime
 from datetime import datetime
-
+import inspect
 
 
 
@@ -108,7 +108,7 @@ class MonitorDaemon(Daemon):
         import pickle
         import os.path
         while(True):
-            print(datetime.now)
+            #print(datetime.now)
             try:
                 r = self.monitor()
             except:
@@ -147,7 +147,7 @@ class MonitorDaemon(Daemon):
         self.log("Reading Device Temp")
         t = dict()                                                                                                                                                                         
         for tf in self.device_temp_sens.keys():
-            print(self.device_temp_sens[tf])
+            #print(self.device_temp_sens[tf])
             f = open(self.device_temp_sens[tf], 'r') 
             t[tf] = [float(f.read()) / 1000.0] 
         return t
@@ -188,7 +188,10 @@ def parse(file_name, key_word):
     return None
 
 if __name__ == "__main__":
-    daemon = MonitorDaemon()
+    from os.path import expanduser
+    home = expanduser("~")    
+    py_monitor_conf =  os.path.join(home,".py-monitor","moni.conf")
+    daemon = MonitorDaemon(py_monitor_conf)
     if len(sys.argv) == 2:
         if 'start' == sys.argv[1]:
             daemon.start()
