@@ -37,8 +37,8 @@ class PublicateDaemon(Daemon):
             stdout=self.log_path+"publicate.log",
             stderr=self.log_path+"publicate.log"
         )
-        mpl.rcParams['legend.fontsize'] = 'medium'
-        mpl.rcParams['axes.labelsize']    = 'large'
+        mpl.rcParams['legend.fontsize']  = 'medium'
+        mpl.rcParams['axes.labelsize']   = 'large'
         mpl.rcParams['xtick.labelsize']  = 'medium'
         mpl.rcParams['ytick.labelsize']  = 'medium'
         
@@ -56,7 +56,6 @@ class PublicateDaemon(Daemon):
     def run(self):
         import pickle
         while(True):
-            #self.publicate()
             self.read_data()
             self.default_temp_plot()
             self.publicate_current_temp()
@@ -99,24 +98,21 @@ class PublicateDaemon(Daemon):
         
         step = 5
         # Plot the data
-        ax.plot(time[::step],temp_indoor[::step], 'r-', label='Inomhustemperatur')
-        ax.plot(time[::step],temp_outdoor[::step], 'b-',label='Utomhustemperatur')
+        ax.plot(time[::step],  temp_indoor[::step], 'r-', label='Inomhustemperatur')
+        ax.plot(time[::step], temp_outdoor[::step], 'b-', label='Utomhustemperatur')
 
-        # Set the xtick locations.
-        tick_steps = 720/2
-        ax.set_xticks(time[277::tick_steps])
+        # Define xtick locations and labels.
         st = time[0]
         st += dt.timedelta(hours=24-st.hour,minutes = -st.minute,seconds = -st.second)
-        # Set the xtick labels.
         xticks = list()
         delta  = time[-1]-st
         end = int((delta.days+1) * 24 )
-        #print(end)
-        #print(delta)
-        #print(time[-1])
         for t in range(0,end,12):
             xticks.append(st + dt.timedelta(hours=t))
             print(st + dt.timedelta(hours=t),t)
+        # Set xtick locations.
+        ax.set_xticks(xticks)
+        # Set xticklables.
         ax.set_xticklabels(
             [date.strftime("%m-%d %H:%M") for date in xticks]
             )
@@ -136,15 +132,13 @@ class PublicateDaemon(Daemon):
         fig.savefig( self.image_output_path+'/temperature.png', dpi=300 )
         #Important to close the figure so that the memory is released.
         plt.close()
+#___________________________________________________________________________________________________
     def publicate_current_temp(self):
         self.log("Writing html file.")
         f = open(self.output_path+"/temperature.html",'w')
         
         f.write("<b>%s: %03.2fC&deg</b> <br>"%('Inomhus', self.data['temp_indoor1'][-1]))
         f.write("<b>%s: %03.2fC&deg</b> <br>"%('Utomhus', self.data['temp_outdoor1'][-1]))
-
-    def publicate(self):
-        pass
 
 if __name__ == "__main__":
         from os.path import expanduser
