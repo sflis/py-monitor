@@ -91,7 +91,11 @@ class MonitorDaemon(Daemon):
         self.device_temp_sens = {'zone0':"/sys/class/thermal/thermal_zone0/temp"}
         os.system('modprobe w1-gpio')
         os.system('modprobe w1-therm')
-        self.devices = {"outdoor1":"/sys/bus/w1/devices/28-0000057a2cf4/w1_slave","indoor1":"/sys/bus/w1/devices/28-0000051a9026/w1_slave",}
+        self.devices = {
+            "outdoor1":"/sys/bus/w1/devices/28-00000574599b/w1_slave",
+            #"outdoor1":"/sys/bus/w1/devices/28-0000057a2cf4/w1_slave",
+            "indoor1":"/sys/bus/w1/devices/28-0000051a9026/w1_slave"
+            }
     
 #___________________________________________________________________________________________________
     def log(self, msg):
@@ -107,14 +111,24 @@ class MonitorDaemon(Daemon):
     def run(self):
         import pickle
         import os.path
+
         while(True):
             #print(datetime.now)
-            try:
-                r = self.monitor()
-            except:
-                e = sys.exc_info()[0]
-                self.log("Caught an exception: %s"%e)
-                continue
+            n_exceptions = 0
+            notread = True
+            while(notread):
+                try:
+                    r = self.monitor()
+                    notread = False
+                except:
+                    e = sys.exc_info()[0]
+                    self.log("Caught an exception: %s"%e)
+                    n_exceptions += 1
+                    notread = True
+                    if(n_exceptions>2):
+                        break
+                    else:
+                        continue
             
             if(not os.path.isfile(self.data_file)):
                 f = open(self.data_file,'wb')
@@ -156,7 +170,11 @@ class MonitorDaemon(Daemon):
         self.log("Reading temperature sensors")
         temps = dict()
         for d in self.devices.keys():
-            f = open(self.devices[d], 'r')
+            try:
+                f = open(self.devices[d], 'r')
+            except:
+                self.log("Caught exception wile reading device: %s"%d) 
+                continue
             lines = f.readlines()
             f.close()
             while (lines[0].strip()[-3:] != 'YES' ):                                                                                                              

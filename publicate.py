@@ -74,15 +74,29 @@ class PublicateDaemon(Daemon):
             except:
                 break
         time = list()
-        temp_indoor = list()
-        temp_outdoor = list()
+        #temp_indoor = list()
+        t#emp_outdoor = list()
+        temp_indoor2 = {'time':list(),'temp':list()}
+        temp_outdoor2 = {'time':list(),'temp':list()}
+        
         for d in data:
             time.append(d['time']['datetime'])
-            temp_indoor.append(d['temp_sens']['indoor1'])
-            temp_outdoor.append(d['temp_sens']['outdoor1'])
+            #temp_indoor.append(d['temp_sens']['indoor1'])
+            #temp_outdoor.append(d['temp_sens']['outdoor1'])
+            if('indoor1' in d['temp_sens'].keys()):
+
+                #print('indoor1: %f'%d['temp_sens']['indoor1'])
+                temp_indoor2['time'].append(d['time']['datetime'])
+                temp_indoor2['temp'].append(d['temp_sens']['indoor1'])
+
+            if('outdoor1' in d['temp_sens'].keys()):
+                temp_outdoor2['time'].append(d['time']['datetime'])
+                temp_outdoor2['temp'].append(d['temp_sens']['outdoor1'])
         self.data['time'] = time
-        self.data['temp_indoor1'] = temp_indoor
-        self.data['temp_outdoor1'] = temp_outdoor
+        #self.data['temp_indoor1'] = temp_indoor
+        #self.data['temp_outdoor1'] = temp_outdoor
+        self.data['temp_outdoor2'] = temp_outdoor2
+        self.data['temp_indoor2'] = temp_indoor2
 #___________________________________________________________________________________________________
     def free_data(self):
         for k in self.data.keys():
@@ -90,34 +104,37 @@ class PublicateDaemon(Daemon):
 #___________________________________________________________________________________________________
     def default_temp_plot(self):
         self.log("Generating temperature plot")
-        temp_indoor = self.data['temp_indoor1']
-        temp_outdoor = self.data['temp_outdoor1']
-        time = self.data['time']
+        temp_indoor = self.data['temp_indoor2']['temp']
+        temp_outdoor = self.data['temp_outdoor2']['temp']
+        time = self.data['temp_indoor2']['time']
+        
         fig = plt.figure(figsize=(20, 10))
         ax = fig.add_subplot(111)
         
         step = 5
         # Plot the data
-        ax.plot(time[::step],  temp_indoor[::step], 'r-', label='Inomhustemperatur')
-        ax.plot(time[::step], temp_outdoor[::step], 'b-', label='Utomhustemperatur')
-
+        ax.plot(time[::step],  temp_indoor[::step], 'or-', label='Inomhustemperatur')
+        time = self.data['temp_outdoor2']['time']
+        ax.plot(time[::step], temp_outdoor[::step], 'ob-', label='Utomhustemperatur')
+        time = self.data['time']
         # Define xtick locations and labels.
         st = time[0]
-        st += dt.timedelta(hours=24-st.hour,minutes = -st.minute,seconds = -st.second)
+        #st += dt.timedelta(hours=24-st.hour,minutes = -st.minute,seconds = -st.second)
         xticks = list()
         delta  = time[-1]-st
         end = int((delta.days+1) * 24 )
-        for t in range(0,end,12):
+        for t in range(0,end,2):
             xticks.append(st + dt.timedelta(hours=t))
             print(st + dt.timedelta(hours=t),t)
         # Set xtick locations.
         ax.set_xticks(xticks)
         # Set xticklables.
         ax.set_xticklabels(
-            [date.strftime("%m-%d %H:%M") for date in xticks]
+            [date.strftime(" %H:%M") for date in xticks]#"%m-%d %H:%M"
             )
 
-        ax.set_ylim( -10, 25 )
+        ax.set_ylim( -5, 30 )
+        ax.set_xlim(time[0],time[-1])
         ax.legend(loc='best')
 
         #setting grid
