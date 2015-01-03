@@ -92,8 +92,8 @@ class MonitorDaemon(Daemon):
         os.system('modprobe w1-gpio')
         os.system('modprobe w1-therm')
         self.devices = {
-            "outdoor1":"/sys/bus/w1/devices/28-00000574599b/w1_slave",
-            #"outdoor1":"/sys/bus/w1/devices/28-0000057a2cf4/w1_slave",
+            "outdoor2":"/sys/bus/w1/devices/28-00000574599b/w1_slave",
+            "outdoor1":"/sys/bus/w1/devices/28-0000057a2cf4/w1_slave",
             "indoor1":"/sys/bus/w1/devices/28-0000051a9026/w1_slave"
             }
     

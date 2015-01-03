@@ -75,7 +75,7 @@ class PublicateDaemon(Daemon):
                 break
         time = list()
         #temp_indoor = list()
-        t#emp_outdoor = list()
+        #temp_outdoor = list()
         temp_indoor2 = {'time':list(),'temp':list()}
         temp_outdoor2 = {'time':list(),'temp':list()}
         
@@ -154,8 +154,9 @@ class PublicateDaemon(Daemon):
         self.log("Writing html file.")
         f = open(self.output_path+"/temperature.html",'w')
         
-        f.write("<b>%s: %03.2fC&deg</b> <br>"%('Inomhus', self.data['temp_indoor1'][-1]))
-        f.write("<b>%s: %03.2fC&deg</b> <br>"%('Utomhus', self.data['temp_outdoor1'][-1]))
+        f.write("<b>%s: %03.2fC&deg</b> <br>"%('Inomhus', self.data['temp_indoor2']['temp'][-1]))
+        if(len(self.data['temp_outdoor2']['temp'])>1):
+            f.write("<b>%s: %03.2fC&deg</b> <br>"%('Utomhus', self.data['temp_outdoor2']['temp'][-1]))
 
 if __name__ == "__main__":
         from os.path import expanduser
